@@ -1,41 +1,8 @@
 import streamlit as st
-import pandas as pd
+
 import numpy as np
 import random as rnd
-import pickle  
-
-@st.cache
-def testDfCreate(lst):
-    df = pd.DataFrame()
-    for i in range(1, 25):
-        df['Q' + str(i)] = 1
-    df.loc[len(df)] = lst
-    return df
-
-def predictDf(df, user_selection, scoring=False):
-    file = 'models/'+ user_selection +'.pkl'
-    model = pickle.load(open(file, 'rb'))
-    prediction = model.predict(df)
-    if scoring:
-        return prediction[0]
-    if prediction[0] == 0 :
-        st.success("A regular responder!")
-        st.balloons()
-    else:
-        st.warning("Carelessness detected!")
-
-@st.cache
-def setType(model_select):
-
-    switch={
-      'Gradient Boosted ':'gbm',
-      'Random Forest':'rf',
-      'K-Nearest Neighbours':'knn',
-      'Support Vector Machines':'svm',
-      'Neural Net':'nnet'
-      }
-    return switch.get(model_select,"gbm")
-
+from helpers import setType, testDfCreate, predictDf
 
 st.set_page_config(
     page_title="Select Models",
@@ -79,15 +46,21 @@ if st.button("Predict based on random generated surveys"):
     predictDf(df, user_selection)
 
 if st.button("Score based on 100 random generated surveys"):
-    st.write('Running ' + user_selection)
     score = 0
-    my_bar = st.progress(0)
-    for run in range(100):
-        my_bar.progress(run + 1)
-        lst = []
-        for a in range(1, 25):
-            lst.append(rnd.randint(1,5))
+    with st.spinner('Running ' + user_selection):
+        my_bar = st.progress(0)
+        for run in range(100):
+            my_bar.progress(run + 1)
+            lst = []
+            for a in range(1, 25):
+                lst.append(rnd.randint(1,5))
 
-        df = testDfCreate(lst)
-        score += predictDf(df, user_selection, True)
-    st.write(score)
+            df = testDfCreate(lst)
+            score += predictDf(df, user_selection, True)
+    result = 'The model had a success rate of ' + str(score) + '%'
+    if score < 50:
+        st.error(result)
+    elif score >= 50 and score < 80:
+        st.warning(result)
+    else:
+        st.success(result)

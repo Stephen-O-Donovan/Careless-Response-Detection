@@ -4,24 +4,9 @@ import numpy as np
 import random as rnd
 import pickle  
 import time
+from helpers import testDfCreate, predictDf
 
 model = pickle.load(open('models/gbm_20_cr_all.pkl', 'rb'))
-
-@st.cache
-def testDfCreate(lst):
-    df = pd.DataFrame()
-    for i in range(1, 25):
-        df['Q' + str(i)] = 1
-    df.loc[len(df)] = lst
-    return df
-
-def predictDf(df):
-        prediction = model.predict(df)
-        if prediction[0] == 0 :
-            st.success("A regular responder!")
-            st.balloons()
-        else:
-            st.warning("Carelessness detected!")
 
 st.set_page_config(
     page_title="Try Your Own",
